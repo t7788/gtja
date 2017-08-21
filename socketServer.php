@@ -4,8 +4,9 @@ $serv = new swoole_server("0.0.0.0", 6002);
 // server 运行前配置
 $serv->set([
     'worker_num' => 2,
-    'daemonize' => false,
-    'task_worker_num' => 2  # task 进程数
+    'daemonize' => true,
+    'task_worker_num' => 2,  # task 进程数
+    'log_file' => './socket.log',
 ]);
 
 //监听连接进入事件
