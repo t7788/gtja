@@ -18,23 +18,21 @@ $serv->on('WorkerStart', function ($serv, $worker_id) {
 
             $length = $redis->lLen('gtja_phoneList');
             for ($i = 0; $i < $length; $i++) {
-                $mobile = $redis->rPop('gtja_phoneList');
+                $mobile_json = $redis->rPop('gtja_phoneList');
                 $conn_list = $serv->connection_list(0, 10);
-                $data = json_encode(['mobile' => $mobile]);
                 foreach ($conn_list as $fd) {
-                    echo "send mobile:$fd-$data\n";
-                    $serv->send($fd, $data);
+                    echo "send mobile:$fd-$mobile_json\n";
+                    $serv->send($fd, $mobile_json);
                 }
             }
 
             $length = $redis->lLen('gtja_codeList');
             for ($i = 0; $i < $length; $i++) {
-                $verifyCode = $redis->rPop('gtja_codeList');
+                $verifyCode_json = $redis->rPop('gtja_codeList');
                 $conn_list = $serv->connection_list(0, 10);
-                $data = json_encode(['verifyCode' => $verifyCode]);
                 foreach ($conn_list as $fd) {
-                    echo "send code:$fd-$data\n";
-                    $serv->send($fd, $data);
+                    echo "send code:$fd-$verifyCode_json\n";
+                    $serv->send($fd, $verifyCode_json);
                 }
             }
             $redis->close();
