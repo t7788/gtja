@@ -15,7 +15,7 @@ $serv->on('connect', function ($serv, $fd) {
 
 //监听数据接收事件
 $serv->on('receive', function ($serv, $fd, $from_id, $data) {
-    $serv->send($fd, "From server [fd:$fd,from_id:$from_id,data:$data]");
+    $serv->send($fd, "From server fd:$fd,from_id:$from_id,data:$data");
 });
 
 
