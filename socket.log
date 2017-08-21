@@ -1,7 +1,0 @@
-Client: Connect.
-Client: Close fd:1.
-[2017-08-21 16:03:40 $74556.0]	WARNING	swManager_check_exit_status: worker#2 abnormal exit, status=0, signal=9
-[2017-08-21 16:03:45 $74556.0]	WARNING	swManager_check_exit_status: worker#3 abnormal exit, status=0, signal=9
-[2017-08-21 16:03:46 $74556.0]	WARNING	swManager_check_exit_status: worker#0 abnormal exit, status=0, signal=9
-[2017-08-21 16:03:47 $74556.0]	WARNING	swManager_check_exit_status: worker#1 abnormal exit, status=0, signal=9
-[2017-08-21 16:03:53 #74555.2]	WARNING	swServer_signal_hanlder: Fatal Error: manager process exit. status=0, signal=9.

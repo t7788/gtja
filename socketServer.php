@@ -19,13 +19,21 @@ $serv->on('WorkerStart', function ($serv, $worker_id) {
             $length = $redis->lLen('gtja_phoneList');
             for ($i = 0; $i < $length; $i++) {
                 $mobile = $redis->rPop('gtja_phoneList');
-                $serv->send(1, json_encode(['mobile' => $mobile]));
+                $conn_list = $serv->connection_list(0, 10);
+                foreach ($conn_list as $fd) {
+                    echo "send:$fd";
+                    $serv->send($fd, json_encode(['mobile' => $mobile]));
+                }
             }
 
             $length = $redis->lLen('gtja_codeList');
             for ($i = 0; $i < $length; $i++) {
                 $verifyCode = $redis->rPop('gtja_codeList');
-                $serv->send(1, json_encode(['verifyCode' => $verifyCode]));
+                $conn_list = $serv->connection_list(0, 10);
+                foreach ($conn_list as $fd) {
+                    echo "send:$fd";
+                    $serv->send($fd, json_encode(['verifyCode' => $verifyCode]));
+                }
             }
             $redis->close();
         });
@@ -39,6 +47,7 @@ $serv->on('connect', function ($serv, $fd) {
 
 //监听数据接收事件
 $serv->on('receive', function ($serv, $fd, $from_id, $data) {
+    echo "receive:$fd";
     $serv->send($fd, "From server fd:$fd,from_id:$from_id,data:$data");
 });
 
