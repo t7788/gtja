@@ -33,7 +33,7 @@ $serv->on('finish', function ($serv, $task_id, $data) {
 
 //监听连接关闭事件
 $serv->on('close', function ($serv, $fd) {
-    echo "Client: Close.\n";
+    echo "Client: Close fd:$fd.\n";
 });
 
 //启动服务器
