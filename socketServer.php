@@ -18,21 +18,25 @@ $serv->on('WorkerStart', function ($serv, $worker_id) {
 
             $length = $redis->lLen('gtja_phoneList');
             for ($i = 0; $i < $length; $i++) {
-                $mobile_json = $redis->rPop('gtja_phoneList');
                 $conn_list = $serv->connection_list(0, 10);
-                foreach ($conn_list as $fd) {
-                    echo "send mobile:$fd-$mobile_json\n";
-                    $serv->send($fd, $mobile_json);
+                if (count($conn_list) > 0) {
+                    $mobile_json = $redis->rPop('gtja_phoneList');
+                    foreach ($conn_list as $fd) {
+                        echo "send mobile:$fd-$mobile_json\n";
+                        $serv->send($fd, $mobile_json);
+                    }
                 }
             }
 
             $length = $redis->lLen('gtja_codeList');
             for ($i = 0; $i < $length; $i++) {
-                $verifyCode_json = $redis->rPop('gtja_codeList');
                 $conn_list = $serv->connection_list(0, 10);
-                foreach ($conn_list as $fd) {
-                    echo "send code:$fd-$verifyCode_json\n";
-                    $serv->send($fd, $verifyCode_json);
+                if (count($conn_list) > 0) {
+                    $verifyCode_json = $redis->rPop('gtja_codeList');
+                    foreach ($conn_list as $fd) {
+                        echo "send code:$fd-$verifyCode_json\n";
+                        $serv->send($fd, $verifyCode_json);
+                    }
                 }
             }
             $redis->close();
@@ -47,7 +51,7 @@ $serv->on('connect', function ($serv, $fd) {
 
 //监听数据接收事件
 $serv->on('receive', function ($serv, $fd, $from_id, $data) {
-    echo "receive:$fd";
+    echo "receive:$fd\n";
     $serv->send($fd, "From server fd:$fd,from_id:$from_id,data:$data");
 });
 
