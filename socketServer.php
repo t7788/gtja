@@ -20,14 +20,16 @@ $serv->on('WorkerStart', function ($serv, $worker_id) {
             for ($i = 0; $i < $length; $i++) {
                 $conn_list = $serv->connection_list(0, 10);
                 if (count($conn_list) > 0) {
-                    $mobile_json = $redis->rPop('gtja_phoneList');
                     foreach ($conn_list as $fd) {
                         //3000ms后执行此函数
-                        swoole_timer_after(30000, function () use ($fd, $mobile_json, $serv) {
-                            echo "send mobile:$fd-$mobile_json\n";
+                        swoole_timer_after(30000, function () use ($fd, $redis, $serv) {
+                            $mobile_json = $redis->rPop('gtja_phoneList');
+                            echo date('Ymd H: i: s', time()) . " send mobile:$fd-$mobile_json\n";
                             $serv->send($fd, $mobile_json);
                         });
                     }
+                } else {
+                    echo date('Ymd H: i: s', time()) . '0 clients' . PHP_EOL;
                 }
             }
 
@@ -35,14 +37,16 @@ $serv->on('WorkerStart', function ($serv, $worker_id) {
             for ($i = 0; $i < $length; $i++) {
                 $conn_list = $serv->connection_list(0, 10);
                 if (count($conn_list) > 0) {
-                    $verifyCode_json = $redis->rPop('gtja_codeList');
                     foreach ($conn_list as $fd) {
                         //3000ms后执行此函数
-                        swoole_timer_after(30000, function () use ($fd, $verifyCode_json, $serv) {
-                            echo "send code:$fd-$verifyCode_json\n";
+                        swoole_timer_after(30000, function () use ($fd, $redis, $serv) {
+                            $verifyCode_json = $redis->rPop('gtja_codeList');
+                            echo date('Ymd H: i: s', time()) . "send code:$fd-$verifyCode_json\n";
                             $serv->send($fd, $verifyCode_json);
                         });
                     }
+                } else {
+                    echo date('Ymd H: i: s', time()) . ' 0 clients' . PHP_EOL;
                 }
             }
             $redis->close();
@@ -52,7 +56,7 @@ $serv->on('WorkerStart', function ($serv, $worker_id) {
 
 //监听连接进入事件
 $serv->on('connect', function ($serv, $fd) {
-    echo "Client: Connect fd:$fd.\n";
+    echo date('Ymd H: i: s', time()) . "Client: Connect fd:$fd.\n";
 });
 
 //监听数据接收事件
@@ -63,19 +67,19 @@ $serv->on('receive', function ($serv, $fd, $from_id, $data) {
 
 //处理异步任务
 $serv->on('task', function ($serv, $task_id, $from_id, $data) {
-    echo "New AsyncTask[id=$task_id]" . PHP_EOL;
+    echo date('Ymd H: i: s', time()) . "New AsyncTask[id=$task_id]" . PHP_EOL;
     //返回任务执行的结果
     $serv->finish("$data -> OK");
 });
 
 //处理异步任务的结果
 $serv->on('finish', function ($serv, $task_id, $data) {
-    echo "AsyncTask[$task_id] Finish: $data" . PHP_EOL;
+    echo date('Ymd H: i: s', time()) . "AsyncTask[$task_id] Finish: $data" . PHP_EOL;
 });
 
 //监听连接关闭事件
 $serv->on('close', function ($serv, $fd) {
-    echo "Client: Close fd:$fd.\n";
+    echo date('Ymd H: i: s', time()) . "Client: Close fd:$fd.\n";
 });
 
 //启动服务器
