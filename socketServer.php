@@ -20,6 +20,7 @@ $serv->on('WorkerStart', function ($serv, $worker_id) {
                 $conn_list = $serv->connection_list(0, 10);
                 if (count($conn_list) > 0) {
                     foreach ($conn_list as $fd) {
+                        echo date('Ymd H:i:s', time()) . " satrt send $fd\n";
                         //3000ms后执行此函数
                         swoole_timer_after(30000, function () use ($fd, $serv) {
                             $redis = new \Redis();
@@ -40,15 +41,10 @@ $serv->on('WorkerStart', function ($serv, $worker_id) {
                 $conn_list = $serv->connection_list(0, 10);
                 if (count($conn_list) > 0) {
                     foreach ($conn_list as $fd) {
-                        //3000ms后执行此函数
-                        swoole_timer_after(30000, function () use ($fd, $serv) {
-                            $redis = new \Redis();
-                            $redis->connect('122.226.180.195', 6001);
-                            $verifyCode_json = $redis->rPop('gtja_codeList');
-                            $redis->close();
-                            echo date('Ymd H:i:s', time()) . "send code:$fd-$verifyCode_json\n";
-                            $serv->send($fd, $verifyCode_json);
-                        });
+                        $verifyCode_json = $redis->rPop('gtja_codeList');
+
+                        echo date('Ymd H:i:s', time()) . "send code:$fd-$verifyCode_json\n";
+                        $serv->send($fd, $verifyCode_json);
                     }
                 } else {
                     echo date('Ymd H:i:s', time()) . ' 0 clients' . PHP_EOL;
