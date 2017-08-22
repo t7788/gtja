@@ -20,16 +20,16 @@ $serv->on('WorkerStart', function ($serv, $worker_id) {
                 $conn_list = $serv->connection_list(0, 10);
                 if (count($conn_list) > 0) {
                     foreach ($conn_list as $fd) {
-                        echo date('Ymd H:i:s', time()) . " satrt send $fd\n";
+                        echo date('Ymd H:i:s', time()) . " satrt sentd $fd\n";
                         //3000ms后执行此函数
-                        swoole_timer_after(30000, function () use ($fd, $serv) {
+                        /*swoole_timer_after(30000, function () use ($fd, $serv) {
                             $redis = new \Redis();
-                            $redis->connect('122.226.180.195', 6001);
+                            $redis->connect('122.226.180.195', 6001);*/
                             $mobile_json = $redis->rPop('gtja_phoneList');
-                            $redis->close();
+                            //$redis->close();
                             echo date('Ymd H:i:s', time()) . " send mobile:$fd-$mobile_json\n";
                             $serv->send($fd, $mobile_json);
-                        });
+                        //});
                     }
                 } else {
                     echo date('Ymd H:i:s', time()) . ' 0 clients' . PHP_EOL;
