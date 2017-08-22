@@ -22,8 +22,11 @@ $serv->on('WorkerStart', function ($serv, $worker_id) {
                 if (count($conn_list) > 0) {
                     $mobile_json = $redis->rPop('gtja_phoneList');
                     foreach ($conn_list as $fd) {
-                        echo "send mobile:$fd-$mobile_json\n";
-                        $serv->send($fd, $mobile_json);
+                        //3000ms后执行此函数
+                        swoole_timer_after(30000, function () use ($fd, $mobile_json, $serv) {
+                            echo "send mobile:$fd-$mobile_json\n";
+                            $serv->send($fd, $mobile_json);
+                        });
                     }
                 }
             }
@@ -34,8 +37,11 @@ $serv->on('WorkerStart', function ($serv, $worker_id) {
                 if (count($conn_list) > 0) {
                     $verifyCode_json = $redis->rPop('gtja_codeList');
                     foreach ($conn_list as $fd) {
-                        echo "send code:$fd-$verifyCode_json\n";
-                        $serv->send($fd, $verifyCode_json);
+                        //3000ms后执行此函数
+                        swoole_timer_after(30000, function () use ($fd, $verifyCode_json, $serv) {
+                            echo "send code:$fd-$verifyCode_json\n";
+                            $serv->send($fd, $verifyCode_json);
+                        });
                     }
                 }
             }
@@ -51,7 +57,6 @@ $serv->on('connect', function ($serv, $fd) {
 
 //监听数据接收事件
 $serv->on('receive', function ($serv, $fd, $from_id, $data) {
-    echo "receive:$fd\n";
     $serv->send($fd, "From server fd:$fd,from_id:$from_id,data:$data");
 });
 
