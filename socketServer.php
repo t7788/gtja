@@ -12,18 +12,20 @@ $serv->set([
 $serv->on('WorkerStart', function ($serv, $worker_id) {
     if (0 == $worker_id) {
         // 启动 Timer 定时器,每5s回调一次 asyncWriteDatabase 函数
-        swoole_timer_tick(1000 * 2, function ($timer_id) use ($serv) {
+        swoole_timer_tick(1000 * 5, function ($timer_id) use ($serv) {
             $redis = new \Redis();
             $redis->connect('122.226.180.195', 6001);
-
             $length = $redis->lLen('gtja_phoneList');
             for ($i = 0; $i < $length; $i++) {
                 $conn_list = $serv->connection_list(0, 10);
                 if (count($conn_list) > 0) {
                     foreach ($conn_list as $fd) {
                         //3000ms后执行此函数
-                        swoole_timer_after(30000, function () use ($fd, $redis, $serv) {
+                        swoole_timer_after(30000, function () use ($fd, $serv) {
+                            $redis = new \Redis();
+                            $redis->connect('122.226.180.195', 6001);
                             $mobile_json = $redis->rPop('gtja_phoneList');
+                            $redis->close();
                             echo date('Ymd H:i:s', time()) . " send mobile:$fd-$mobile_json\n";
                             $serv->send($fd, $mobile_json);
                         });
@@ -39,8 +41,11 @@ $serv->on('WorkerStart', function ($serv, $worker_id) {
                 if (count($conn_list) > 0) {
                     foreach ($conn_list as $fd) {
                         //3000ms后执行此函数
-                        swoole_timer_after(30000, function () use ($fd, $redis, $serv) {
+                        swoole_timer_after(30000, function () use ($fd, $serv) {
+                            $redis = new \Redis();
+                            $redis->connect('122.226.180.195', 6001);
                             $verifyCode_json = $redis->rPop('gtja_codeList');
+                            $redis->close();
                             echo date('Ymd H:i:s', time()) . "send code:$fd-$verifyCode_json\n";
                             $serv->send($fd, $verifyCode_json);
                         });
