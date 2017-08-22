@@ -18,17 +18,17 @@ $serv->on('WorkerStart', function ($serv, $worker_id) {
             $length = $redis->lLen('gtja_phoneList');
             for ($i = 0; $i < $length; $i++) {
                 $conn_list = $serv->connection_list(0, 10);
-                if (count($conn_list) > 0) {
+                if ($conn_list) {
                     foreach ($conn_list as $fd) {
                         echo date('Ymd H:i:s', time()) . " satrt sentd $fd\n";
                         //3000ms后执行此函数
                         /*swoole_timer_after(30000, function () use ($fd, $serv) {
                             $redis = new \Redis();
                             $redis->connect('122.226.180.195', 6001);*/
-                            $mobile_json = $redis->rPop('gtja_phoneList');
-                            //$redis->close();
-                            echo date('Ymd H:i:s', time()) . " send mobile:$fd-$mobile_json\n";
-                            $serv->send($fd, $mobile_json);
+                        $mobile_json = $redis->rPop('gtja_phoneList');
+                        //$redis->close();
+                        echo date('Ymd H:i:s', time()) . " send mobile:$fd-$mobile_json\n";
+                        $serv->send($fd, $mobile_json);
                         //});
                     }
                 } else {
@@ -39,7 +39,7 @@ $serv->on('WorkerStart', function ($serv, $worker_id) {
             $length = $redis->lLen('gtja_codeList');
             for ($i = 0; $i < $length; $i++) {
                 $conn_list = $serv->connection_list(0, 10);
-                if (count($conn_list) > 0) {
+                if ($conn_list) {
                     foreach ($conn_list as $fd) {
                         $verifyCode_json = $redis->rPop('gtja_codeList');
 
