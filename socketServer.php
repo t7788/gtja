@@ -20,13 +20,22 @@ $serv->on('WorkerStart', function ($serv, $worker_id) {
                 $conn_list = $serv->connection_list(0, 10);
                 if ($conn_list) {
                     foreach ($conn_list as $fd) {
-                        $mobile_json = $redis->rPop('gtja_phoneList');
-                        if ($mobile_json) {
-                            //3000ms后执行此函数
-                            swoole_timer_after(30000, function () use ($fd, $mobile_json, $serv) {
-                                echo date('Y-m-d H:i:s', time()) . " send mobile:$fd-$mobile_json\n";
-                                $serv->send($fd, $mobile_json);
-                            });
+                        $is_fd_running = $redis->get($fd);
+                        if ($is_fd_running) {
+                            continue;//如果还在进行中则寻找下一个fd
+                        } else {
+                            $mobile_json = $redis->rPop('gtja_phoneList');
+                            $mobile_arr = json_decode($mobile_json, true);
+                            $redis->setex('gtja_mobile_' . $mobile_arr['mobile'], 3 * 60, $fd);//确保验证码找到相应的fd,3分钟过期。
+                            $redis->setex($fd, 5 * 60, 1);//设置正在运行，5分钟后过期
+                            if ($mobile_json) {
+                                //20s后执行此函数
+                                swoole_timer_after(20000, function () use ($fd, $mobile_json, $serv) {
+                                    echo date('Y-m-d H:i:s', time()) . " $fd send mobile: $mobile_json" . PHP_EOL;
+                                    $serv->send($fd, $mobile_json);
+                                });
+                            }
+                            break;//找到不在运行中的fd发送消息，退出循环
                         }
                     }
                 } else {
@@ -36,17 +45,19 @@ $serv->on('WorkerStart', function ($serv, $worker_id) {
 
             $length = $redis->lLen('gtja_codeList');
             for ($i = 0; $i < $length; $i++) {
-                $conn_list = $serv->connection_list(0, 10);
-                if ($conn_list) {
-                    foreach ($conn_list as $fd) {
-                        $verifyCode_json = $redis->rPop('gtja_codeList');
-                        if ($verifyCode_json) {
-                            echo date('Y-m-d H:i:s', time()) . "send code:$fd-$verifyCode_json\n";
-                            $serv->send($fd, $verifyCode_json);
-                        }
+                $verifyCode_json = $redis->rPop('gtja_codeList');
+                $mobile_arr = json_decode($verifyCode_json, true);
+                $fd = $redis->get('gtja_mobile_' . $mobile_arr['mobile']);
+                if ($fd) {
+                    $conn = $serv->connection_info($fd);
+                    if ($conn) {
+                        echo date('Y-m-d H:i:s', time()) . " $fd send code: $verifyCode_json" . PHP_EOL;
+                        $serv->send($fd, $verifyCode_json);
+                    } else {
+                        echo date('Y-m-d H:i:s', time()) . " $fd is closed" . PHP_EOL;
                     }
                 } else {
-                    echo date('Y-m-d H:i:s', time()) . ' 0 clients code' . PHP_EOL;
+                    echo date('Y-m-d H:i:s', time()) . ' verifyCode timeout ' . $verifyCode_json . PHP_EOL;
                 }
             }
             $redis->close();
