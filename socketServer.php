@@ -28,14 +28,16 @@ $serv->on('WorkerStart', function ($serv, $worker_id) {
                         } else {
                             $mobile_json = $redis->rPop('gtja_phoneList');
                             $mobile_arr = json_decode($mobile_json, true);
-                            $redis->setex('gtja_mobile_' . $mobile_arr['mobile'], 4 * 60, $fd);//确保验证码找到相应的fd,3分钟过期。
+                            $redis->setex('gtja_mobile_' . $mobile_arr['mobile'], 5 * 60, $fd);//确保验证码找到相应的fd,5分钟过期。
                             $redis->setex($fd, 5 * 60, 1);//设置正在运行，5分钟后过期
                             if ($mobile_json) {
                                 //1min后执行此函数
-                                swoole_timer_after(60000, function () use ($fd, $mobile_json, $serv) {
+                                /*swoole_timer_after(60000, function () use ($fd, $mobile_json, $serv) {
                                     echo date('Y-m-d H:i:s', time()) . " $fd send mobile: $mobile_json" . PHP_EOL;
                                     $serv->send($fd, $mobile_json);
-                                });
+                                });*/
+                                echo date('Y-m-d H:i:s', time()) . " $fd send mobile: $mobile_json" . PHP_EOL;
+                                $serv->send($fd, $mobile_json);
                             }
                             break;//找到不在运行中的fd发送消息，退出循环
                         }
