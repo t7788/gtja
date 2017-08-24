@@ -17,7 +17,7 @@ $serv->on('WorkerStart', function ($serv, $worker_id) {
             $redis->connect('122.226.180.195', 6001);
             $length = $redis->lLen('gtja_phoneList');
             $conn_list = $serv->connection_list(0, 10);
-            echo date('Y-m-d H:i:s', time()) . 'count:' . count($conn_list) . PHP_EOL;
+            echo date('Y-m-d H:i:s', time()) . ' count:' . count($conn_list) . PHP_EOL;
             for ($i = 0; $i < $length; $i++) {
                 $conn_list = $serv->connection_list(0, 10);
                 if ($conn_list) {
