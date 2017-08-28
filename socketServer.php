@@ -17,9 +17,9 @@ $serv->on('WorkerStart', function ($serv, $worker_id) {
             $redis->connect('122.226.180.195', 6001);
             $phone_len = $redis->lLen('gtja_phoneList');
             $conn_list = $serv->connection_list(0, 10);
-            $conn_count = count($conn_list);
+            $conn_count = $conn_list ? count($conn_list) : 0;
             echo date('Y-m-d H:i:s', time()) . " count:$conn_count" . PHP_EOL;
-            if ($phone_len > 0 && $conn_list && $conn_count > 0) {//号码队列里面有号码，并且有连接的客户端
+            if ($phone_len > 0 && $conn_count > 0) {//号码队列里面有号码，并且有连接的客户端
                 foreach ($conn_list as $fd) {
                     $is_fd_running = $redis->get($fd);
                     if ($is_fd_running) {
