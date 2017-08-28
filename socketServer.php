@@ -11,40 +11,36 @@ $serv->set([
 
 $serv->on('WorkerStart', function ($serv, $worker_id) {
     if (0 == $worker_id) {
-        // 启动 Timer 定时器,每5s回调一次 asyncWriteDatabase 函数
+        //启动Timer定时器,每5s回调一次
         swoole_timer_tick(1000 * 5, function ($timer_id) use ($serv) {
             $redis = new \Redis();
             $redis->connect('122.226.180.195', 6001);
-            $length = $redis->lLen('gtja_phoneList');
+            $phone_len = $redis->lLen('gtja_phoneList');
             $conn_list = $serv->connection_list(0, 10);
-            echo date('Y-m-d H:i:s', time()) . ' count:' . count($conn_list) . PHP_EOL;
-            for ($i = 0; $i < $length; $i++) {
-                $conn_list = $serv->connection_list(0, 10);
-                if ($conn_list) {
-                    foreach ($conn_list as $fd) {
-                        $is_fd_running = $redis->get($fd);
-                        if ($is_fd_running) {
-                            continue;//如果还在进行中则寻找下一个fd
-                        } else {
-                            $mobile_json = $redis->rPop('gtja_phoneList');
+            $conn_count = count($conn_list);
+            echo date('Y-m-d H:i:s', time()) . " count:$conn_count" . PHP_EOL;
+            if ($phone_len > 0 && $conn_count > 0) {//号码队列里面有号码，并且有连接的客户端
+                foreach ($conn_list as $fd) {
+                    $is_fd_running = $redis->get($fd);
+                    if ($is_fd_running) {
+                        continue;//如果还在进行中则寻找下一个fd
+                    } else {
+                        $mobile_json = $redis->rPop('gtja_phoneList');
+                        if ($mobile_json) {
                             $mobile_arr = json_decode($mobile_json, true);
-                            $redis->setex('gtja_mobile_' . $mobile_arr['mobile'], 5 * 60, $fd);//确保验证码找到相应的fd,5分钟过期。
+                            $redis->setex('gtja_mobile_' . $mobile_arr['mobile'], 5 * 60, $fd);//确保验证码找到相应的fd,5d分钟过期。
                             $redis->setex($fd, 5 * 60, 1);//设置正在运行，5分钟后过期
                             if ($mobile_json) {
-                                //1min后执行此函数
-                                /*swoole_timer_after(60000, function () use ($fd, $mobile_json, $serv) {
-                                    echo date('Y-m-d H:i:s', time()) . " $fd send mobile: $mobile_json" . PHP_EOL;
-                                    $serv->send($fd, $mobile_json);
-                                });*/
                                 echo date('Y-m-d H:i:s', time()) . " $fd send mobile: $mobile_json" . PHP_EOL;
                                 $serv->send($fd, $mobile_json);
                             }
-                            break;//找到不在运行中的fd发送消息，退出循环
+                        } else {
+                            break;//没有号码就退出循环
                         }
                     }
-                } else {
-                    echo date('Y-m-d H:i:s', time()) . ' 0 clients mobile' . PHP_EOL;
                 }
+            } else {
+                echo date('Y-m-d H:i:s', time()) . ' 0 clients or 0 mobile' . PHP_EOL;
             }
 
             $length = $redis->lLen('gtja_codeList');
