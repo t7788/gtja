@@ -28,8 +28,8 @@ $serv->on('WorkerStart', function ($serv, $worker_id) {
                         $mobile_json = $redis->rPop('gtja_phoneList');
                         if ($mobile_json) {
                             $mobile_arr = json_decode($mobile_json, true);
-                            $redis->setex('gtja_mobile_' . $mobile_arr['mobile'], 5 * 60, $fd);//确保验证码找到相应的fd,5d分钟过期。
-                            $redis->setex($fd, 5 * 60, 1);//设置正在运行，5分钟后过期
+                            $redis->setex('gtja_mobile_' . $mobile_arr['mobile'], 4 * 60, $fd);//确保验证码找到相应的fd,5d分钟过期。
+                            $redis->setex($fd, 4 * 60, 1);//设置正在运行，5分钟后过期
                             if ($mobile_json) {
                                 echo date('Y-m-d H:i:s', time()) . " $fd send mobile: $mobile_json" . PHP_EOL;
                                 $serv->send($fd, $mobile_json);
@@ -39,9 +39,7 @@ $serv->on('WorkerStart', function ($serv, $worker_id) {
                         }
                     }
                 }
-            } /*else {
-                echo date('Y-m-d H:i:s', time()) . ' 0 clients or 0 mobile' . PHP_EOL;
-            }*/
+            }
 
             $length = $redis->lLen('gtja_codeList');
             for ($i = 0; $i < $length; $i++) {
