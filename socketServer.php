@@ -11,14 +11,14 @@ $serv->set([
 
 $serv->on('WorkerStart', function ($serv, $worker_id) {
     if (0 == $worker_id) {
-        //启动Timer定时器,每5s回调一次
-        swoole_timer_tick(1000 * 5, function ($timer_id) use ($serv) {
+        //启动Timer定时器,每1s回调一次
+        swoole_timer_tick(1000 * 1, function ($timer_id) use ($serv) {
             $redis = new \Redis();
             $redis->connect('122.226.180.195', 6001);
             $phone_len = $redis->lLen('gtja_phoneList');
             $conn_list = $serv->connection_list(0, 10);
             $conn_count = $conn_list ? count($conn_list) : 0;
-            echo date('Y-m-d H:i:s', time()) . " count:$conn_count" . PHP_EOL;
+            echo date('Y-m-d H:i:s', time()) . " phone_len:$phone_len conn_count:$conn_count" . PHP_EOL;
             if ($phone_len > 0 && $conn_count > 0) {//号码队列里面有号码，并且有连接的客户端
                 foreach ($conn_list as $fd) {
                     $is_fd_running = $redis->get($fd);
@@ -39,9 +39,9 @@ $serv->on('WorkerStart', function ($serv, $worker_id) {
                         }
                     }
                 }
-            } else {
+            } /*else {
                 echo date('Y-m-d H:i:s', time()) . ' 0 clients or 0 mobile' . PHP_EOL;
-            }
+            }*/
 
             $length = $redis->lLen('gtja_codeList');
             for ($i = 0; $i < $length; $i++) {
